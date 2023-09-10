@@ -1,9 +1,8 @@
+/*
 import 'dart:convert';
 import 'package:crypto_font_icons/crypto_font_icons.dart';
-import 'package:currency_fractal/wallets/eth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fractal_gold/widgets/listen.dart';
 
 class FractalEth extends StatelessWidget {
   final void Function(String)? onTap;
@@ -61,3 +60,4 @@ class FractalEth extends StatelessWidget {
     );
   }
 }
+*/
