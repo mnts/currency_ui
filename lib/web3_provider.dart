@@ -4,11 +4,7 @@ import 'package:eth_sig_util/eth_sig_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web3/ethereum.dart';
 import 'package:flutter_web3/ethers.dart';
-import 'package:fractals/models/account.dart';
-import 'package:http/http.dart';
-
 import 'package:js/js.dart';
-import 'package:velocity_x/velocity_x.dart';
 
 @JS('web3.eth.accounts.hashMessage') // This marks the annotated function as a call to `console.log`
 external String hashMessage(String name);
