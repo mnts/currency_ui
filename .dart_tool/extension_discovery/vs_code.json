@@ -1,1 +1,1 @@
-{"version":2,"entries":[{"package":"currency_ui","rootUri":"../","packageUri":"lib/"}]}
+{"version":2,"entries":[{"package":"crypto_fractal","rootUri":"../../crypto_fractal/","packageUri":"lib/"},{"package":"fractal","rootUri":"../../fractal/","packageUri":"lib/"},{"package":"fractal_layout","rootUri":"../../fractal_layout/","packageUri":"lib/"},{"package":"currency_ui","rootUri":"../","packageUri":"lib/"}]}

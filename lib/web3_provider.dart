@@ -1,20 +1,11 @@
 import 'dart:convert';
-//import 'package:acc_fractal/auth/metamask.dart';
-import 'package:eth_sig_util/eth_sig_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web3/ethereum.dart';
-import 'package:flutter_web3/ethers.dart';
-import 'package:js/js.dart';
+import 'package:fractal/models/network.dart';
+import 'package:http/http.dart' as http;
 
-@JS('web3.eth.accounts.hashMessage') // This marks the annotated function as a call to `console.log`
-external String hashMessage(String name);
-
-@JS('web3.eth.personal.sign') // This marks the annotated function as a call to `console.log`
-external String signMessage(String data, String address, String password);
-
-class SlyAuthButton extends StatelessWidget {
-  final Function(String) onComplete;
-  SlyAuthButton({Key? key, required this.onComplete});
+class FAuthButton extends StatelessWidget {
+  const FAuthButton({super.key});
 
   static String addr = '';
 
@@ -22,39 +13,38 @@ class SlyAuthButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 70,
-      child: ElevatedButton(
-        child: HStack([
-          Image.asset(
-            'assets/metamask.png',
-            height: 64,
-          ),
-          Text("Enter")
-        ]),
+      child: FilledButton(
         onPressed: () async {
-          if (addr.length > 0) return onComplete(addr);
+          if (addr.isNotEmpty) return; //onComplete(addr);
           if (ethereum != null) {
             final eth = ethereum!;
-            print('START ETH');
 
             var accounts = await eth.request('eth_requestAccounts');
             if (accounts[0] == null) return print('No account connected');
             String address = accounts[0];
 
-            print(address);
+            final net = NetworkFractal.out;
+            if (net == null) throw 'Not online';
 
-            //final signed = hashMessage(msg);
-            //String sign = await eth.request('eth_sign', [address, signed]);
+            String nonce = (await net.rx({
+              'cmd': 'web3nonce',
+              'address': address,
+            }))['nonce'];
 
-            //final web3 = Web3Provider.fromEthereum(eth);
+            final message = 'Authenticate Fractal by $nonce';
+            String signature = await eth.request(
+              'personal_sign',
+              [message, address],
+            );
 
-            final message = jsonEncode(msg);
+            final status = (await net.rx({
+              'cmd': 'web3verify',
+              'address': address,
+              'message': message,
+              'signature': signature,
+            }))['status'];
 
-            String signature = EthSigUtil.signTypedData(
-                privateKey: address,
-                jsonData: message,
-                version: TypedDataVersion.V4);
-
-            onComplete(address);
+            print(status);
 
             /*
             final auth = AuthMMFractal(
@@ -65,39 +55,40 @@ class SlyAuthButton extends StatelessWidget {
             */
           }
         },
+        child: const Text('MetaMask'),
       ),
     );
   }
 
-  final msg = {
-    'domain': {
-      // Defining the chain aka Rinkeby testnet or Ethereum Main Net
-      'chainId': 1,
-      'verifyingContract': '0xCefb4EeE91a3ce1F3843F79450b13CfaFd09f749',
-      'name': 'Slyverse',
-      'version': '1',
-    },
-    'message': {
-      'contents':
-          'Welcome to the beta testing phase of the Slyverse. Please sign in to continue.',
-    },
-    'primaryType': 'Sly',
-    'types': {
-      'EIP712Domain': [
-        {'name': 'name', 'type': 'string'},
-        {'name': 'version', 'type': 'string'},
-        {'name': 'chainId', 'type': 'uint256'},
-      ],
-      // Not an EIP712Domain definition
-      'Group': [
-        {'name': 'name', 'type': 'string'},
-        {'name': 'members', 'type': 'Person[]'},
-      ],
-      'Sly': [
-        {'name': 'contents', 'type': 'string'},
-      ],
-    },
-  };
+  Map<String, dynamic> msg(String nonce) => {
+        'nonce': nonce,
+        'domain': {
+          // Defining the chain aka Rinkeby testnet or Ethereum Main Net
+          'chainId': 1,
+          'verifyingContract': '0xCefb4EeE91a3ce1F3843F79450b13CfaFd09f749',
+          'name': 'Fractal',
+          'version': '1',
+        },
+        'message': {
+          'contents': 'Initial phase of the Fractal protocol',
+        },
+        'primaryType': 'Fractal',
+        'types': {
+          'EIP712Domain': [
+            {'name': 'name', 'type': 'string'},
+            {'name': 'version', 'type': 'string'},
+            {'name': 'chainId', 'type': 'uint256'},
+          ],
+          // Not an EIP712Domain definition
+          'Group': [
+            {'name': 'name', 'type': 'string'},
+            {'name': 'members', 'type': 'Person[]'},
+          ],
+          'Fractal': [
+            {'name': 'contents', 'type': 'string'},
+          ],
+        },
+      };
 
 /*   Uint8List keccak(dynamic a, {int bits: 256}) {
     a = bytes.toBuffer(a);
@@ -106,18 +97,15 @@ class SlyAuthButton extends StatelessWidget {
   }
  */
   req(Map<String, String> g) async {
-    final uri = Uri.parse(Acc.base + '/auth/providers/web3');
+    final uri = Uri.parse('/auth/providers/web3');
 
-    var request = Request(
-      'GET',
+    var res = await http.get(
       uri.replace(
         queryParameters: g,
       ),
     );
 
-    final res = await request.send();
-
-    Map<String, dynamic> r = jsonDecode(await res.stream.bytesToString());
+    final r = jsonDecode(res.body);
     r['acc']['user']['email'] = '';
     r['session']['user'] = r['acc']['user'];
     activate(r['session']);
