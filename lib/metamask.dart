@@ -2,9 +2,8 @@
 library metamask;
 
 import 'dart:convert';
-
-import 'package:crypto_fractal/utils/utils.dart';
-import 'package:js/js.dart';
+import 'package:convert/convert.dart' show hex;
+import 'dart:js_interop';
 import 'dart:async';
 
 // MetaMask SDK instance
@@ -60,4 +59,26 @@ class MetaMask {
     });
     return signature as String;
   }
+}
+
+String bytesToHex(
+  List<int> bytes, {
+  bool include0x = false,
+  int? forcePadLength,
+  bool padToEvenLength = false,
+}) {
+  var encoded = hex.encode(bytes);
+
+  if (forcePadLength != null) {
+    assert(forcePadLength >= encoded.length);
+
+    final padding = forcePadLength - encoded.length;
+    encoded = ('0' * padding) + encoded;
+  }
+
+  if (padToEvenLength && encoded.length % 2 != 0) {
+    encoded = '0$encoded';
+  }
+
+  return (include0x ? '0x' : '') + encoded;
 }

@@ -10,7 +10,7 @@ class FCryptoAuth extends StatelessWidget {
       height: 34,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        children: [
+        children: const [
           FAuthButton(),
         ],
       ),

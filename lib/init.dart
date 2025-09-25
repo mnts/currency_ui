@@ -1,4 +1,4 @@
-export 'io.dart' if (dart.library.html) 'html.dart';
+export 'io.dart' if (dart.library.js_interop) 'html.dart';
 
 abstract class WalletFractalImpl {
   Future<bool> init();
